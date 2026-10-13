@@ -1,0 +1,753 @@
+-- ============================================
+-- TusterX UI - Roblox (FLY nativo + TextBox)
+-- ============================================
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+if game.CoreGui:FindFirstChild("TusterXUI") then
+    game.CoreGui.TusterXUI:Destroy()
+end
+
+-- ============================================
+-- TEMAS
+-- ============================================
+local Themes = {
+    Dark = {
+        Background = Color3.fromRGB(20, 20, 25),
+        Header = Color3.fromRGB(15, 15, 20),
+        Text = Color3.fromRGB(255, 255, 255),
+        SubText = Color3.fromRGB(180, 180, 190),
+        Element = Color3.fromRGB(35, 35, 45),
+        Accent = Color3.fromRGB(120, 80, 255),
+        Stroke = Color3.fromRGB(60, 60, 80),
+    },
+    Light = {
+        Background = Color3.fromRGB(240, 240, 245),
+        Header = Color3.fromRGB(225, 225, 235),
+        Text = Color3.fromRGB(20, 20, 30),
+        SubText = Color3.fromRGB(90, 90, 110),
+        Element = Color3.fromRGB(255, 255, 255),
+        Accent = Color3.fromRGB(120, 80, 255),
+        Stroke = Color3.fromRGB(180, 180, 200),
+    }
+}
+
+local CurrentTheme = "Dark"
+
+-- ============================================
+-- SCREEN GUI
+-- ============================================
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "TusterXUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = game.CoreGui
+
+-- ============================================
+-- MAIN FRAME
+-- ============================================
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.new(0, 460, 0, 340)
+Main.Position = UDim2.new(0.5, -230, 0.5, -170)
+Main.BackgroundColor3 = Themes[CurrentTheme].Background
+Main.BorderSizePixel = 0
+Main.Active = true
+Main.ClipsDescendants = true
+Main.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = Main
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Themes[CurrentTheme].Stroke
+MainStroke.Thickness = 1.5
+MainStroke.Parent = Main
+
+-- ============================================
+-- HEADER
+-- ============================================
+local Header = Instance.new("Frame")
+Header.Name = "Header"
+Header.Size = UDim2.new(1, 0, 0, 45)
+Header.BackgroundColor3 = Themes[CurrentTheme].Header
+Header.BorderSizePixel = 0
+Header.Parent = Main
+
+local HeaderFix = Instance.new("Frame")
+HeaderFix.Size = UDim2.new(1, 0, 0, 12)
+HeaderFix.Position = UDim2.new(0, 0, 1, -12)
+HeaderFix.BackgroundColor3 = Themes[CurrentTheme].Header
+HeaderFix.BorderSizePixel = 0
+HeaderFix.Parent = Header
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(0.5, 0, 1, 0)
+Title.Position = UDim2.new(0, 20, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "TusterX"
+Title.TextColor3 = Themes[CurrentTheme].Accent
+Title.TextSize = 22
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = Header
+
+local TitleGradient = Instance.new("UIGradient")
+TitleGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 80, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 100, 255)),
+}
+TitleGradient.Parent = Title
+
+-- ============================================
+-- BOTÕES JANELA
+-- ============================================
+local function createWindowButton(name, text, posX, color)
+    local btn = Instance.new("TextButton")
+    btn.Name = name
+    btn.Size = UDim2.new(0, 28, 0, 28)
+    btn.Position = UDim2.new(1, posX, 0, 8)
+    btn.BackgroundColor3 = color
+    btn.BackgroundTransparency = 0.5
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 16
+    btn.Font = Enum.Font.GothamBold
+    btn.AutoButtonColor = false
+    btn.Parent = Header
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.5}):Play()
+    end)
+
+    return btn
+end
+
+local CloseBtn = createWindowButton("Close", "X", -38, Color3.fromRGB(200, 50, 50))
+local MinimizeBtn = createWindowButton("Minimize", "_", -72, Color3.fromRGB(80, 80, 100))
+MinimizeBtn.TextYAlignment = Enum.TextYAlignment.Top
+MinimizeBtn.TextSize = 20
+
+-- ============================================
+-- TOGGLE THEME
+-- ============================================
+local ThemeBtn = Instance.new("TextButton")
+ThemeBtn.Size = UDim2.new(0, 95, 0, 26)
+ThemeBtn.Position = UDim2.new(1, -175, 0, 10)
+ThemeBtn.BackgroundColor3 = Themes[CurrentTheme].Element
+ThemeBtn.Text = "DARK MODE"
+ThemeBtn.TextColor3 = Themes[CurrentTheme].Text
+ThemeBtn.TextSize = 11
+ThemeBtn.Font = Enum.Font.GothamBold
+ThemeBtn.AutoButtonColor = false
+ThemeBtn.Parent = Header
+
+local ThemeCorner = Instance.new("UICorner")
+ThemeCorner.CornerRadius = UDim.new(0, 6)
+ThemeCorner.Parent = ThemeBtn
+
+local ThemeStroke = Instance.new("UIStroke")
+ThemeStroke.Color = Themes[CurrentTheme].Stroke
+ThemeStroke.Thickness = 1
+ThemeStroke.Parent = ThemeBtn
+
+-- ============================================
+-- CONTAINER
+-- ============================================
+local Content = Instance.new("Frame")
+Content.Name = "Content"
+Content.Size = UDim2.new(1, -24, 1, -70)
+Content.Position = UDim2.new(0, 12, 0, 58)
+Content.BackgroundTransparency = 1
+Content.Parent = Main
+
+local ContentLayout = Instance.new("UIListLayout")
+ContentLayout.Padding = UDim.new(0, 8)
+ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ContentLayout.Parent = Content
+
+-- ============================================
+-- MÓDULO BASE
+-- ============================================
+local function createModule(title)
+    local Module = Instance.new("Frame")
+    Module.Name = title .. "Module"
+    Module.Size = UDim2.new(1, 0, 0, 60)
+    Module.BackgroundColor3 = Themes[CurrentTheme].Element
+    Module.BorderSizePixel = 0
+    Module.Parent = Content
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 10)
+    corner.Parent = Module
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Themes[CurrentTheme].Stroke
+    stroke.Thickness = 1
+    stroke.Parent = Module
+
+    local ModuleTitle = Instance.new("TextLabel")
+    ModuleTitle.Name = "ModuleTitle"
+    ModuleTitle.Size = UDim2.new(0.4, 0, 1, 0)
+    ModuleTitle.Position = UDim2.new(0, 15, 0, 0)
+    ModuleTitle.BackgroundTransparency = 1
+    ModuleTitle.Text = title
+    ModuleTitle.TextColor3 = Themes[CurrentTheme].Text
+    ModuleTitle.TextSize = 15
+    ModuleTitle.Font = Enum.Font.GothamBold
+    ModuleTitle.TextXAlignment = Enum.TextXAlignment.Left
+    ModuleTitle.Parent = Module
+
+    return Module, stroke
+end
+
+-- ============================================
+-- TOGGLE SWITCH
+-- ============================================
+local function createToggle(parent)
+    local Toggle = Instance.new("TextButton")
+    Toggle.Name = "Toggle"
+    Toggle.Size = UDim2.new(0, 48, 0, 24)
+    Toggle.Position = UDim2.new(1, -60, 0.5, -12)
+    Toggle.BackgroundColor3 = Themes[CurrentTheme].Stroke
+    Toggle.Text = ""
+    Toggle.AutoButtonColor = false
+    Toggle.Parent = parent
+
+    local tCorner = Instance.new("UICorner")
+    tCorner.CornerRadius = UDim.new(1, 0)
+    tCorner.Parent = Toggle
+
+    local Circle = Instance.new("Frame")
+    Circle.Name = "Circle"
+    Circle.Size = UDim2.new(0, 18, 0, 18)
+    Circle.Position = UDim2.new(0, 3, 0.5, -9)
+    Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Circle.Parent = Toggle
+
+    local cCorner = Instance.new("UICorner")
+    cCorner.CornerRadius = UDim.new(1, 0)
+    cCorner.Parent = Circle
+
+    local state = false
+    local callbacks = {}
+
+    Toggle.MouseButton1Click:Connect(function()
+        state = not state
+        if state then
+            TweenService:Create(Toggle, TweenInfo.new(0.2), {BackgroundColor3 = Themes[CurrentTheme].Accent}):Play()
+            TweenService:Create(Circle, TweenInfo.new(0.2), {Position = UDim2.new(1, -21, 0.5, -9)}):Play()
+        else
+            TweenService:Create(Toggle, TweenInfo.new(0.2), {BackgroundColor3 = Themes[CurrentTheme].Stroke}):Play()
+            TweenService:Create(Circle, TweenInfo.new(0.2), {Position = UDim2.new(0, 3, 0.5, -9)}):Play()
+        end
+        for _, cb in pairs(callbacks) do cb(state) end
+    end)
+
+    return Toggle, function() return state end, function(cb) table.insert(callbacks, cb) end
+end
+
+-- ============================================
+-- TEXTBOX
+-- ============================================
+local function createTextBox(parent, placeholder, posX, width)
+    local Box = Instance.new("TextBox")
+    Box.Name = "Input"
+    Box.Size = UDim2.new(0, width or 70, 0, 28)
+    Box.Position = UDim2.new(1, posX, 0.5, -14)
+    Box.BackgroundColor3 = Themes[CurrentTheme].Background
+    Box.Text = ""
+    Box.PlaceholderText = placeholder
+    Box.PlaceholderColor3 = Themes[CurrentTheme].SubText
+    Box.TextColor3 = Themes[CurrentTheme].Text
+    Box.TextSize = 13
+    Box.Font = Enum.Font.Gotham
+    Box.ClearTextOnFocus = false
+    Box.Parent = parent
+
+    local bCorner = Instance.new("UICorner")
+    bCorner.CornerRadius = UDim.new(0, 6)
+    bCorner.Parent = Box
+
+    local bStroke = Instance.new("UIStroke")
+    bStroke.Color = Themes[CurrentTheme].Stroke
+    bStroke.Thickness = 1
+    bStroke.Parent = Box
+
+    Box.Focused:Connect(function()
+        TweenService:Create(bStroke, TweenInfo.new(0.2), {Color = Themes[CurrentTheme].Accent}):Play()
+    end)
+    Box.FocusLost:Connect(function()
+        TweenService:Create(bStroke, TweenInfo.new(0.2), {Color = Themes[CurrentTheme].Stroke}):Play()
+    end)
+
+    return Box
+end
+
+-- ============================================
+-- MÓDULOS
+-- ============================================
+local EspModule = createModule("ESP")
+local EspToggle, getEspState, onEspChange = createToggle(EspModule)
+
+local FlyModule = createModule("Fly")
+local FlyToggle, getFlyState, onFlyChange = createToggle(FlyModule)
+local FlyBox = createTextBox(FlyModule, "60", -140, 70)
+FlyBox.Text = "60"
+
+local SpeedModule = createModule("Speed")
+local SpeedToggle = createToggle(SpeedModule)
+local SpeedBox = createTextBox(SpeedModule, "16", -140, 70)
+SpeedBox.Text = "16"
+
+local JumpModule = createModule("Jump")
+local JumpToggle = createToggle(JumpModule)
+local JumpBox = createTextBox(JumpModule, "50", -140, 70)
+JumpBox.Text = "50"
+
+-- ============================================
+-- SPEED / JUMP
+-- ============================================
+SpeedBox.FocusLost:Connect(function()
+    local num = tonumber(SpeedBox.Text)
+    if num and LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum.WalkSpeed = num end
+    end
+end)
+
+JumpBox.FocusLost:Connect(function()
+    local num = tonumber(JumpBox.Text)
+    if num and LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.UseJumpPower = true
+            hum.JumpPower = num
+        end
+    end
+end)
+
+-- ============================================
+-- ESP
+-- ============================================
+local ESPEnabled = false
+local ESPObjects = {}
+
+local function createESPForPlayer(plr)
+    if plr == LocalPlayer or not plr.Character then return end
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "TusterX_ESP"
+    highlight.FillColor = Color3.fromRGB(120, 80, 255)
+    highlight.OutlineColor = Color3.fromRGB(200, 100, 255)
+    highlight.FillTransparency = 0.6
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Adornee = plr.Character
+    highlight.Parent = plr.Character
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "TusterX_Billboard"
+    billboard.Size = UDim2.new(0, 200, 0, 60)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Adornee = plr.Character
+    billboard.Parent = plr.Character
+
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(1, 0, 0, 20)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = plr.Name
+    nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    nameLabel.TextStrokeTransparency = 0
+    nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    nameLabel.TextSize = 14
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.Parent = billboard
+
+    local healthLabel = Instance.new("TextLabel")
+    healthLabel.Size = UDim2.new(1, 0, 0, 18)
+    healthLabel.Position = UDim2.new(0, 0, 0, 20)
+    healthLabel.BackgroundTransparency = 1
+    healthLabel.Text = "100 HP"
+    healthLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+    healthLabel.TextStrokeTransparency = 0
+    healthLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    healthLabel.TextSize = 13
+    healthLabel.Font = Enum.Font.Gotham
+    healthLabel.Parent = billboard
+
+    local distanceLabel = Instance.new("TextLabel")
+    distanceLabel.Size = UDim2.new(1, 0, 0, 18)
+    distanceLabel.Position = UDim2.new(0, 0, 0, 38)
+    distanceLabel.BackgroundTransparency = 1
+    distanceLabel.Text = "0 studs"
+    distanceLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    distanceLabel.TextStrokeTransparency = 0
+    distanceLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    distanceLabel.TextSize = 12
+    distanceLabel.Font = Enum.Font.Gotham
+    distanceLabel.Parent = billboard
+
+    ESPObjects[plr] = {
+        highlight = highlight,
+        billboard = billboard,
+        healthLabel = healthLabel,
+        distanceLabel = distanceLabel
+    }
+end
+
+local function removeESPForPlayer(plr)
+    if ESPObjects[plr] then
+        for _, obj in pairs(ESPObjects[plr]) do
+            if obj and obj.Destroy then obj:Destroy() end
+        end
+        ESPObjects[plr] = nil
+    end
+end
+
+local function clearAllESP()
+    for plr, _ in pairs(ESPObjects) do
+        removeESPForPlayer(plr)
+    end
+end
+
+RunService.RenderStepped:Connect(function()
+    if not ESPEnabled then return end
+    for plr, data in pairs(ESPObjects) do
+        if plr.Character then
+            local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+            local root = plr.Character:FindFirstChild("HumanoidRootPart")
+            if hum and root then
+                local hp = math.floor(hum.Health)
+                data.healthLabel.Text = hp .. " HP"
+                if hp > 70 then
+                    data.healthLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+                elseif hp > 30 then
+                    data.healthLabel.TextColor3 = Color3.fromRGB(255, 200, 50)
+                else
+                    data.healthLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+                end
+
+                local localChar = LocalPlayer.Character
+                local localRoot = localChar and localChar:FindFirstChild("HumanoidRootPart")
+                if localRoot then
+                    local dist = math.floor((root.Position - localRoot.Position).Magnitude)
+                    data.distanceLabel.Text = dist .. " studs"
+                end
+
+                data.highlight.Adornee = plr.Character
+                data.billboard.Adornee = plr.Character
+            end
+        end
+    end
+end)
+
+onEspChange(function(state)
+    ESPEnabled = state
+    if state then
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character then
+                createESPForPlayer(plr)
+            end
+        end
+    else
+        clearAllESP()
+    end
+end)
+
+Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(function()
+        if ESPEnabled then
+            task.wait(0.5)
+            createESPForPlayer(plr)
+        end
+    end)
+end)
+
+Players.PlayerRemoving:Connect(function(plr)
+    removeESPForPlayer(plr)
+end)
+
+-- ============================================
+-- FLY (usa controles nativos do Roblox)
+-- ============================================
+local FlyEnabled = false
+local FlyConnection = nil
+local FlyBodyVelocity = nil
+local FlyBodyGyro = nil
+local FlySpeed = 60
+
+-- Atualiza velocidade pelo TextBox
+FlyBox.FocusLost:Connect(function()
+    local num = tonumber(FlyBox.Text)
+    if num then
+        FlySpeed = num
+    end
+end)
+
+local function getMoveVectorFromHumanoid(hum)
+    -- MoveDirection do Humanoid já vem dos controles nativos (WASD / joystick)
+    return hum.MoveDirection
+end
+
+local function startFly()
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum then return end
+
+    FlyBodyVelocity = Instance.new("BodyVelocity")
+    FlyBodyVelocity.Name = "TusterX_FlyVelocity"
+    FlyBodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    FlyBodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    FlyBodyVelocity.Parent = hrp
+
+    FlyBodyGyro = Instance.new("BodyGyro")
+    FlyBodyGyro.Name = "TusterX_FlyGyro"
+    FlyBodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+    FlyBodyGyro.P = 1000
+    FlyBodyGyro.D = 50
+    FlyBodyGyro.CFrame = hrp.CFrame
+    FlyBodyGyro.Parent = hrp
+
+    hum.PlatformStand = true
+
+    FlyConnection = RunService.RenderStepped:Connect(function()
+        if not hrp.Parent or not FlyBodyVelocity or not FlyBodyGyro then return end
+        if not LocalPlayer.Character then return end
+
+        local cam = workspace.CurrentCamera
+        local currentHum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if not currentHum then return end
+
+        -- Pega direção de movimento do Humanoid (nativo: WASD / joystick mobile)
+        local moveDir = currentHum.MoveDirection
+
+        -- Converte direção da câmera (frente/trás/lados)
+        local look = cam.CFrame.LookVector
+        local right = cam.CFrame.RightVector
+
+        local velocity = Vector3.new(0, 0, 0)
+
+        if moveDir.Magnitude > 0 then
+            -- moveDir está no espaço do mundo, projetar nos eixos da câmera
+            local flatLook = Vector3.new(look.X, 0, look.Z).Unit
+            local flatRight = Vector3.new(right.X, 0, right.Z).Unit
+
+            local forward = moveDir:Dot(flatLook)
+            local side = moveDir:Dot(flatRight)
+
+            velocity = (flatLook * forward + flatRight * side).Unit * FlySpeed
+        end
+
+        -- Subir/descer com os botões nativos
+        if currentHum.Jump then
+            velocity = velocity + Vector3.new(0, FlySpeed, 0)
+        end
+
+        -- Roblox nativo não tem "descer" por padrão.
+        -- Se quiser descer, segure Ctrl (PC) ou use botão do jump enquanto olha pra baixo.
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl)
+        or UserInputService:IsKeyDown(Enum.KeyCode.RightControl) then
+            velocity = velocity - Vector3.new(0, FlySpeed, 0)
+        end
+
+        FlyBodyVelocity.Velocity = velocity
+        FlyBodyGyro.CFrame = cam.CFrame
+    end)
+end
+
+local function stopFly()
+    if FlyConnection then
+        FlyConnection:Disconnect()
+        FlyConnection = nil
+    end
+    if FlyBodyVelocity then
+        FlyBodyVelocity:Destroy()
+        FlyBodyVelocity = nil
+    end
+    if FlyBodyGyro then
+        FlyBodyGyro:Destroy()
+        FlyBodyGyro = nil
+    end
+    local char = LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then hum.PlatformStand = false end
+    end
+end
+
+onFlyChange(function(state)
+    FlyEnabled = state
+    if state then
+        startFly()
+    else
+        stopFly()
+    end
+end)
+
+-- Reaplicar Fly ao respawnar
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    if FlyEnabled then
+        startFly()
+    end
+    if ESPEnabled then
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character then
+                createESPForPlayer(plr)
+            end
+        end
+    end
+end)
+
+-- ============================================
+-- TROCA DE TEMA
+-- ============================================
+local function ApplyTheme(themeName)
+    CurrentTheme = themeName
+    local T = Themes[themeName]
+
+    TweenService:Create(Main, TweenInfo.new(0.3), {BackgroundColor3 = T.Background}):Play()
+    TweenService:Create(MainStroke, TweenInfo.new(0.3), {Color = T.Stroke}):Play()
+    TweenService:Create(Header, TweenInfo.new(0.3), {BackgroundColor3 = T.Header}):Play()
+    TweenService:Create(HeaderFix, TweenInfo.new(0.3), {BackgroundColor3 = T.Header}):Play()
+    TweenService:Create(Title, TweenInfo.new(0.3), {TextColor3 = T.Accent}):Play()
+
+    TweenService:Create(ThemeBtn, TweenInfo.new(0.3), {
+        BackgroundColor3 = T.Element,
+        TextColor3 = T.Text
+    }):Play()
+    TweenService:Create(ThemeStroke, TweenInfo.new(0.3), {Color = T.Stroke}):Play()
+
+    ThemeBtn.Text = themeName == "Dark" and "DARK MODE" or "LIGHT MODE"
+
+    for _, mod in pairs(Content:GetChildren()) do
+        if mod:IsA("Frame") then
+            TweenService:Create(mod, TweenInfo.new(0.3), {BackgroundColor3 = T.Element}):Play()
+            for _, child in pairs(mod:GetChildren()) do
+                if child:IsA("UIStroke") then
+                    TweenService:Create(child, TweenInfo.new(0.3), {Color = T.Stroke}):Play()
+                elseif child:IsA("TextLabel") and child.Name == "ModuleTitle" then
+                    TweenService:Create(child, TweenInfo.new(0.3), {TextColor3 = T.Text}):Play()
+                elseif child:IsA("TextBox") then
+                    TweenService:Create(child, TweenInfo.new(0.3), {
+                        BackgroundColor3 = T.Background,
+                        TextColor3 = T.Text,
+                        PlaceholderColor3 = T.SubText
+                    }):Play()
+                    for _, s in pairs(child:GetChildren()) do
+                        if s:IsA("UIStroke") then
+                            TweenService:Create(s, TweenInfo.new(0.3), {Color = T.Stroke}):Play()
+                        end
+                    end
+                elseif child:IsA("TextButton") and child.Name == "Toggle" then
+                    local circle = child:FindFirstChild("Circle")
+                    if circle and circle.Position.X.Scale < 0.5 then
+                        TweenService:Create(child, TweenInfo.new(0.3), {BackgroundColor3 = T.Stroke}):Play()
+                    end
+                end
+            end
+        end
+    end
+end
+
+ThemeBtn.MouseButton1Click:Connect(function()
+    ApplyTheme(CurrentTheme == "Dark" and "Light" or "Dark")
+end)
+
+-- ============================================
+-- DRAG
+-- ============================================
+local dragging = false
+local dragStart, startPos
+
+Header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = Main.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement 
+    or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        Main.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- ============================================
+-- MINIMIZAR
+-- ============================================
+local minimized = false
+local originalSize = UDim2.new(0, 460, 0, 340)
+
+MinimizeBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        Content.Visible = false
+        TweenService:Create(Main, TweenInfo.new(0.35, Enum.EasingStyle.Quart), 
+            {Size = UDim2.new(0, 460, 0, 45)}):Play()
+    else
+        TweenService:Create(Main, TweenInfo.new(0.35, Enum.EasingStyle.Quart), 
+            {Size = originalSize}):Play()
+        task.wait(0.1)
+        Content.Visible = true
+    end
+end)
+
+-- ============================================
+-- FECHAR
+-- ============================================
+CloseBtn.MouseButton1Click:Connect(function()
+    stopFly()
+    clearAllESP()
+
+    TweenService:Create(Main, TweenInfo.new(0.3), {
+        Size = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0)
+    }):Play()
+    task.wait(0.3)
+    ScreenGui:Destroy()
+end)
+
+-- ============================================
+-- ANIMAÇÃO DE ENTRADA
+-- ============================================
+Main.Size = UDim2.new(0, 0, 0, 0)
+Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+task.wait(0.05)
+TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    Size = originalSize,
+    Position = UDim2.new(0.5, -230, 0.5, -170)
+}):Play()
+
+print("✅ TusterX UI carregada! FLY usa controles nativos do Roblox.")
